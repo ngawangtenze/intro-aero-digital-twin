@@ -13,6 +13,10 @@ import {
 
 const TOLERANCE = 1e-6;
 
+const REFERENCE_CM = 0.00006686671436974267;
+const REFERENCE_TRIM_ANGLE_DEG = 2.8647889756541165;
+const REFERENCE_DELTA_CM = -0.027925268031909273;
+
 describe("Stage 4 trim-response physics", () => {
   describe("numerical verification case", () => {
     it("matches the supplied reference values within the specified tolerance", () => {
@@ -23,18 +27,20 @@ describe("Stage 4 trim-response physics", () => {
         disturbanceAlphaDeg: 2.0,
       });
 
-      expect(result.cm).toBeCloseTo(0.00007, 6);
-      expect(result.trimAngleDeg).toBeCloseTo(2.86479, 5);
-      expect(result.deltaCm).toBeCloseTo(-0.02793, 5);
+      expect(
+        Math.abs(result.cm - REFERENCE_CM),
+      ).toBeLessThanOrEqual(TOLERANCE);
+
+      expect(
+        Math.abs(result.trimAngleDeg - REFERENCE_TRIM_ANGLE_DEG),
+      ).toBeLessThanOrEqual(TOLERANCE);
+
+      expect(
+        Math.abs(result.deltaCm - REFERENCE_DELTA_CM),
+      ).toBeLessThanOrEqual(TOLERANCE);
+
       expect(result.trimmed).toBe(false);
       expect(result.disturbanceTendency).toBe("restoring");
-
-      expect(Math.abs(result.cm - 0.00007)).toBeLessThanOrEqual(
-        TOLERANCE,
-      );
-      expect(Math.abs(result.deltaCm - -0.02793)).toBeLessThanOrEqual(
-        TOLERANCE,
-      );
     });
   });
 
@@ -55,12 +61,14 @@ describe("Stage 4 trim-response physics", () => {
       });
 
       expect(doubled.deltaCm).toBeLessThan(baseline.deltaCm);
+
       expect(
         Math.abs(
           Math.abs(doubled.deltaCm) -
             2 * Math.abs(baseline.deltaCm),
         ),
       ).toBeLessThanOrEqual(TOLERANCE);
+
       expect(doubled.disturbanceTendency).toBe("restoring");
     });
   });
@@ -92,14 +100,21 @@ describe("Stage 4 trim-response physics", () => {
       const alphaRad = degreesToRadians(2.86);
       const cm = calculateCm(0.04, -0.8, alphaRad);
 
-      expect(cm).toBeCloseTo(0.00007, 6);
+      expect(
+        Math.abs(cm - REFERENCE_CM),
+      ).toBeLessThanOrEqual(TOLERANCE);
     });
 
     it("calculates the trim angle when the slope is nonzero", () => {
       const trimRad = calculateTrimAngleRad(0.04, -0.8);
 
       expect(trimRad).toBeCloseTo(0.05, 10);
-      expect(radiansToDegrees(trimRad)).toBeCloseTo(2.86479, 5);
+
+      expect(
+        Math.abs(
+          radiansToDegrees(trimRad) - REFERENCE_TRIM_ANGLE_DEG,
+        ),
+      ).toBeLessThanOrEqual(TOLERANCE);
     });
 
     it("returns no trim angle for zero slope", () => {
@@ -110,7 +125,9 @@ describe("Stage 4 trim-response physics", () => {
       const disturbanceRad = degreesToRadians(2.0);
       const deltaCm = calculateDeltaCm(-0.8, disturbanceRad);
 
-      expect(deltaCm).toBeCloseTo(-0.02793, 5);
+      expect(
+        Math.abs(deltaCm - REFERENCE_DELTA_CM),
+      ).toBeLessThanOrEqual(TOLERANCE);
     });
 
     it("classifies a negative disturbance product as restoring", () => {
